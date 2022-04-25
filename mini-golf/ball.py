@@ -16,3 +16,10 @@ class Ball:
 
 	def draw(self):
 		commons.screen.blit(self.image, self.rect)
+
+
+class Pointer:
+	def __init__(self, ball):
+		self.image = pygame.image.load("images/pointer.png").convert_alpha()
+		self.rect = self.image.get_rect()
+		self.rect = ball.rect.center

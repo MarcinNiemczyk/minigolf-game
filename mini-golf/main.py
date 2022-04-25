@@ -1,36 +1,16 @@
 import pygame
 import commons
-import math
 import sys
+import vectors
 
-from ball import Ball
-
-
-def calc_difference(ball_pos, mouse_pos):
-	"""Return a vector that is difference between target and initial position."""
-	return mouse_pos[0] - ball_pos[0], mouse_pos[1] - ball_pos[1]
-
-
-def calc_magnitude(vec):
-	"""Return length of a vector, indispensable to normalize vector."""
-	return math.sqrt(vec[0] ** 2 + vec[1] ** 2)
-
-
-def normalize_vector(vec):
-	"""Return a normalized vector with proper x, y ratio and set direction."""
-	vec_length = calc_magnitude(vec)
-
-	if vec_length < 0.00001:
-		return 0, 1
-
-	return (vec[0] / vec_length), (vec[1] / vec_length)
+from ball import Ball, Pointer
 
 
 def calc_velocity(mouse_pos):
 	"""Set initial ball speed using math functions."""
 	initial_pos = ball.rect.center
-	diff = calc_difference(initial_pos, mouse_pos)
-	normalized_direction = normalize_vector(diff)
+	diff = vectors.calc_difference(initial_pos, mouse_pos)
+	normalized_direction = vectors.normalize_vector(diff)
 
 	ball.velocity_x = normalized_direction[0] * force
 	ball.velocity_y = normalized_direction[1] * force
@@ -61,16 +41,37 @@ def handle_ball_movement():
 		ball.velocity_y = 0
 
 
+def handle_pointer_movement():
+	"""Rotate the pointer image correct to follow the mouse cursor."""
+	if move:
+		pointer.rect = 0, 0
+	else:
+		pointer.rect = ball.rect.center
+		mouse_pos = pygame.mouse.get_pos()
+		diff = vectors.calc_difference(pointer.rect, mouse_pos)
+		angle = vectors.calc_angle(diff) - 45  # Image is drawn in 45 degrees
+
+		w, h = pointer.image.get_size()
+		# List elements represent the 4 corner points of the image bounding box.
+		box = [(0, 0), (w, 0), (w, -h), (0, -h)]
+		box_rotate = [vectors.rotate(p, angle) for p in box]
+		min_x = (min(box_rotate, key=lambda p: p[0])[0])
+		max_y = (max(box_rotate, key=lambda p: p[1])[1])
+		# Move the origin point by difference before and after rotation.
+		origin = (pointer.rect[0] + min_x, pointer.rect[1] - max_y)
+
+		rotated_image = pygame.transform.rotate(pointer.image, angle)
+		commons.screen.blit(rotated_image, origin)
+
+
 def update():
 	check_screen_collisions()
 
 
 def draw():
 	commons.screen.fill(commons.bg_color)
-	if not move:
-		pygame.draw.line(commons.screen, "black", ball.rect.center,
-		                 mouse_position, 2)
 
+	handle_pointer_movement()
 	ball.draw()
 	pygame.display.update()
 
@@ -86,15 +87,14 @@ icon_image = pygame.image.load("images/ball.png").convert_alpha()
 pygame.display.set_icon(icon_image)
 
 ball = Ball()
+pointer = Pointer(ball)
 move = False
 force = 0
 increase_force = False
+angle = 0
 
 # The main loop for the game.
 while app_running:
-	# Create a line that connects user's cursor with the ball.
-	mouse_position = pygame.mouse.get_pos()
-	line = [ball.rect.center, mouse_position]
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
@@ -129,10 +129,11 @@ while app_running:
 	ball.rect.centery = ball.y
 
 	# FIXME: Temporary force print.
-	print(force)
+	# print(force)
 
 	update()
 	draw()
+
 	clock.tick(commons.fps)
 
 pygame.quit()
