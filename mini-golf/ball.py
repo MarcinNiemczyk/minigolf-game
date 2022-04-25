@@ -23,3 +23,26 @@ class Pointer:
 		self.image = pygame.image.load("images/pointer.png").convert_alpha()
 		self.rect = self.image.get_rect()
 		self.rect = ball.rect.center
+
+
+class Indicator:
+	def __init__(self):
+		self.image = pygame.image.load("images/indicator.png").convert_alpha()
+		self.rect = self.image.get_rect()
+		self.rect = -100, -100
+		self.image = pygame.transform.scale(self.image, (32, 32))
+
+	def draw(self):
+		commons.screen.blit(self.image, self.rect)
+
+	def increase(self, force):
+		fill_pos = 30 - (force // 100) * 2
+		fill_size = 0 + (force // 100) * 2
+		color = (236, 255, 0)
+
+		pigment = pygame.rect.Rect(14, fill_pos, 6, fill_size)
+		pygame.draw.rect(self.image, color, pigment)
+
+		if force < 100:
+			self.image = pygame.image.load("images/indicator.png").convert_alpha()
+			self.image = pygame.transform.scale(self.image, (32, 32))

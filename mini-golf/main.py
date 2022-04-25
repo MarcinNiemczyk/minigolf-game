@@ -3,7 +3,7 @@ import commons
 import sys
 import vectors
 
-from ball import Ball, Pointer
+from ball import Ball, Pointer, Indicator
 
 
 def calc_velocity(mouse_pos):
@@ -73,6 +73,7 @@ def draw():
 
 	handle_pointer_movement()
 	ball.draw()
+	indicator.draw()
 	pygame.display.update()
 
 
@@ -88,6 +89,7 @@ pygame.display.set_icon(icon_image)
 
 ball = Ball()
 pointer = Pointer(ball)
+indicator = Indicator()
 move = False
 force = 0
 increase_force = False
@@ -102,9 +104,9 @@ while app_running:
 
 		elif event.type == pygame.MOUSEBUTTONDOWN:
 			if event.button == pygame.BUTTON_LEFT:
-				force = 0
 				if not move:
 					increase_force = True
+					indicator.rect = (ball.rect.right + 5, ball.rect.top - 5)
 
 		elif event.type == pygame.MOUSEBUTTONUP:
 			if event.button == pygame.BUTTON_LEFT:
@@ -117,19 +119,19 @@ while app_running:
 		force += 10
 		if force >= 400:
 			force += 10
-		if force >= 1500:
+		if force >= 1400:
 			increase_force = False
+	indicator.increase(force)
 
 	if move:
 		handle_ball_movement()
+		indicator.rect = -100, -100
+		force = 0
 	if ball.velocity_x == 0 and ball.velocity_y == 0:
 		move = False
 	# Position of the ball needs to be updated with float x, y values.
 	ball.rect.centerx = ball.x
 	ball.rect.centery = ball.y
-
-	# FIXME: Temporary force print.
-	# print(force)
 
 	update()
 	draw()
