@@ -24,6 +24,40 @@ def check_screen_collisions():
 		ball.velocity_y = -ball.velocity_y
 
 
+def check_hole_collision():
+	"""Check if the ball collide with the hole field and simulate a fall."""
+	global win
+	global move
+
+	# Number 4 is a margin from the hole center that allows to indicate collision.
+	if hole.rect.centerx - 4 < ball.rect.centerx < hole.rect.centerx + 4 and \
+			hole.rect.centery - 4 < ball.rect.centery < hole.rect.centery + 4:
+
+		# Move the ball towards the center of the hole.
+		diff = vectors.calc_difference(ball.rect.center, hole.rect.center)
+		move = True
+		ball.velocity_x = diff[0]
+		ball.velocity_y = diff[1]
+		ball.x += ball.velocity_x * 0.4
+		ball.y += ball.velocity_y * 0.4
+		if ball.rect.center == hole.rect.center:
+			ball.velocity_x = 0
+			ball.velocity_y = 0
+
+		# Ball falling simulation.
+		ball.image = pygame.transform.smoothscale(ball.image,
+		                                          (ball.initial_size_x,
+		                                           ball.initial_size_y))
+		ball.rect = ball.image.get_rect()
+		ball.rect.center = hole.rect.centerx - diff[0], hole.rect.centery - diff[1]
+		if ball.initial_size_x >= 3 and ball.initial_size_y >= 3:
+			ball.initial_size_x -= 0.3
+			ball.initial_size_y -= 0.3
+
+	if ball.image.get_size() == (3, 3):
+		win = True
+
+
 def handle_ball_movement():
 	ball.x += ball.velocity_x * commons.delta_time
 	ball.y += ball.velocity_y * commons.delta_time
@@ -67,6 +101,7 @@ def handle_pointer_movement():
 
 def update():
 	check_screen_collisions()
+	check_hole_collision()
 
 
 def draw():
@@ -98,8 +133,6 @@ indicator = Indicator()
 move = False
 force = 0
 increase_force = False
-angle = 0
-ball_initial_size_x, ball_initial_size_y = ball.image.get_size()
 win = False
 
 # The main loop for the game.
@@ -140,35 +173,10 @@ while app_running:
 	ball.rect.centerx = ball.x
 	ball.rect.centery = ball.y
 
-	if hole.rect.centerx - 4 < ball.rect.centerx < hole.rect.centerx + 4 and \
-			hole.rect.centery - 4 < ball.rect.centery < hole.rect.centery + 4:
-		diff = vectors.calc_difference(ball.rect.center, hole.rect.center)
-		move = True
-		ball.velocity_x = diff[0]
-		ball.velocity_y = diff[1]
-		ball.x += ball.velocity_x * 0.4
-		ball.y += ball.velocity_y * 0.4
-
-		if ball.rect.center == hole.rect.center:
-			ball.velocity_x = 0
-			ball.velocity_y = 0
-
-		ball.image = pygame.transform.smoothscale(ball.image,
-		                                          (ball_initial_size_x,
-		                                           ball_initial_size_y))
-		ball.rect = ball.image.get_rect()
-		ball.rect.center = hole.rect.centerx - diff[0], hole.rect.centery - diff[1]
-		if ball_initial_size_x >= 3 and ball_initial_size_y >= 3:
-			ball_initial_size_x -= 0.3
-			ball_initial_size_y -= 0.3
-
-	if ball.image.get_size() == (3, 3):
-		win = True
-
 	if win:
 		move = False
 		ball = Ball()
-		ball_initial_size_x, ball_initial_size_y = ball.image.get_size()
+		ball.initial_size_x, ball.initial_size_y = ball.image.get_size()
 		win = False
 
 	update()

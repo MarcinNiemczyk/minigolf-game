@@ -9,6 +9,7 @@ class Ball:
 		self.rect.center = commons.initial_ball_pos
 		self.velocity_x = 0.0
 		self.velocity_y = 0.0
+		self.initial_size_x, self.initial_size_y = self.image.get_size()
 
 		# Float values of a ball position vector are needed to handle movement.
 		self.x = float(self.rect.centerx)
