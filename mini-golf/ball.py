@@ -1,9 +1,12 @@
 import pygame
 import commons
 
+from pygame.sprite import Sprite
 
-class Ball:
+
+class Ball(Sprite):
 	def __init__(self):
+		super().__init__()
 		self.image = pygame.image.load("images/ball.png").convert_alpha()
 		self.rect = self.image.get_rect()
 		self.rect.center = commons.initial_ball_pos

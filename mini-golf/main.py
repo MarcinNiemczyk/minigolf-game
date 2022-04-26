@@ -4,7 +4,7 @@ import sys
 import vectors
 
 from ball import Ball, Pointer, Indicator
-from terrain import Hole
+from terrain import Hole, Block
 
 
 def calc_velocity(mouse_pos):
@@ -58,6 +58,19 @@ def check_hole_collision():
 		win = True
 
 
+def check_block_collision():
+	collide_object = pygame.sprite.spritecollide(ball, blocks, False)
+	if collide_object:
+		if collide_object[0].rect.collidepoint(ball.rect.midleft):
+			ball.velocity_x = -ball.velocity_x
+		if collide_object[0].rect.collidepoint(ball.rect.midright):
+			ball.velocity_x = -ball.velocity_x
+		if collide_object[0].rect.collidepoint(ball.rect.midtop):
+			ball.velocity_y = -ball.velocity_y
+		if collide_object[0].rect.collidepoint(ball.rect.midbottom):
+			ball.velocity_y = -ball.velocity_y
+
+
 def handle_ball_movement():
 	ball.x += ball.velocity_x * commons.delta_time
 	ball.y += ball.velocity_y * commons.delta_time
@@ -102,6 +115,7 @@ def handle_pointer_movement():
 def update():
 	check_screen_collisions()
 	check_hole_collision()
+	check_block_collision()
 
 
 def draw():
@@ -109,6 +123,7 @@ def draw():
 
 	hole.draw()
 	ball.draw()
+	blocks.draw(commons.screen)
 	indicator.draw()
 	handle_pointer_movement()
 
@@ -124,6 +139,9 @@ commons.screen = pygame.display.set_mode((commons.screen_width,
 pygame.display.set_caption("Mini-Golf")
 icon_image = pygame.image.load("images/ball.png").convert_alpha()
 pygame.display.set_icon(icon_image)
+
+block = Block(100, 100, 75, 75, (21, 112, 12))
+blocks = pygame.sprite.Group(block)
 
 ball = Ball()
 hole = Hole()
