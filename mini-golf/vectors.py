@@ -1,9 +1,9 @@
 import math
 
 
-def calc_difference(ball_pos, mouse_pos):
+def calc_difference(initial_pos, target_pos):
 	"""Return a vector that is difference between target and initial position."""
-	return mouse_pos[0] - ball_pos[0], mouse_pos[1] - ball_pos[1]
+	return target_pos[0] - initial_pos[0], target_pos[1] - initial_pos[1]
 
 
 def calc_magnitude(vec):

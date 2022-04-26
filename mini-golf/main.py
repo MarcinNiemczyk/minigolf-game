@@ -4,6 +4,7 @@ import sys
 import vectors
 
 from ball import Ball, Pointer, Indicator
+from terrain import Hole
 
 
 def calc_velocity(mouse_pos):
@@ -71,9 +72,11 @@ def update():
 def draw():
 	commons.screen.fill(commons.bg_color)
 
-	handle_pointer_movement()
+	hole.draw()
 	ball.draw()
 	indicator.draw()
+	handle_pointer_movement()
+
 	pygame.display.update()
 
 
@@ -88,12 +91,16 @@ icon_image = pygame.image.load("images/ball.png").convert_alpha()
 pygame.display.set_icon(icon_image)
 
 ball = Ball()
+hole = Hole()
 pointer = Pointer(ball)
 indicator = Indicator()
+
 move = False
 force = 0
 increase_force = False
 angle = 0
+ball_initial_size_x, ball_initial_size_y = ball.image.get_size()
+win = False
 
 # The main loop for the game.
 while app_running:
@@ -132,6 +139,37 @@ while app_running:
 	# Position of the ball needs to be updated with float x, y values.
 	ball.rect.centerx = ball.x
 	ball.rect.centery = ball.y
+
+	if hole.rect.centerx - 4 < ball.rect.centerx < hole.rect.centerx + 4 and \
+			hole.rect.centery - 4 < ball.rect.centery < hole.rect.centery + 4:
+		diff = vectors.calc_difference(ball.rect.center, hole.rect.center)
+		move = True
+		ball.velocity_x = diff[0]
+		ball.velocity_y = diff[1]
+		ball.x += ball.velocity_x * 0.4
+		ball.y += ball.velocity_y * 0.4
+
+		if ball.rect.center == hole.rect.center:
+			ball.velocity_x = 0
+			ball.velocity_y = 0
+
+		ball.image = pygame.transform.smoothscale(ball.image,
+		                                          (ball_initial_size_x,
+		                                           ball_initial_size_y))
+		ball.rect = ball.image.get_rect()
+		ball.rect.center = hole.rect.centerx - diff[0], hole.rect.centery - diff[1]
+		if ball_initial_size_x >= 3 and ball_initial_size_y >= 3:
+			ball_initial_size_x -= 0.3
+			ball_initial_size_y -= 0.3
+
+	if ball.image.get_size() == (3, 3):
+		win = True
+
+	if win:
+		move = False
+		ball = Ball()
+		ball_initial_size_x, ball_initial_size_y = ball.image.get_size()
+		win = False
 
 	update()
 	draw()

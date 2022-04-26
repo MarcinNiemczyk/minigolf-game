@@ -10,3 +10,4 @@ bg_color = (90, 170, 56)
 screen = None
 
 initial_ball_pos = (screen_width/2, screen_height/2)
+initial_hole_pos = 300, 100
