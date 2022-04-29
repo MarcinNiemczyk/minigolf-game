@@ -140,8 +140,7 @@ pygame.display.set_caption("Mini-Golf")
 icon_image = pygame.image.load("images/ball.png").convert_alpha()
 pygame.display.set_icon(icon_image)
 
-block = Block(100, 100, 75, 75, (21, 112, 12))
-blocks = pygame.sprite.Group(block)
+blocks = pygame.sprite.Group()
 
 ball = Ball()
 hole = Hole()
@@ -173,10 +172,16 @@ while app_running:
 					move = True
 					increase_force = False
 
+		elif event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_SPACE:
+				ball = Ball()
+
 	if increase_force:
 		force += 10
-		if force >= 400:
+		if force >= 50:
 			force += 10
+		if force >= 500:
+			force += 20
 		if force >= 1400:
 			increase_force = False
 	indicator.increase(force)
@@ -193,7 +198,53 @@ while app_running:
 
 	if win:
 		move = False
+		commons.level += 1
+		if commons.level == 2:
+			block1 = Block(150, 255, 75, 75, "white")
+			block2 = Block(350, 255, 75, 75, "white")
+			block3 = Block(550, 255, 75, 75, "white")
+			blocks.add(block1, block2, block3)
+		if commons.level == 3:
+			blocks.empty()
+			block1 = Block(350, 25, 75, 75, "white")
+			block2 = Block(350, 500, 75, 75, "white")
+			block3 = Block(500, 255, 75, 75, "white")
+			blocks.add(block1, block2, block3)
+		if commons.level == 4:
+			blocks.empty()
+			commons.initial_ball_pos = 50, 550
+			commons.initial_hole_pos = 720, 550
+			block1 = Block(350, 25, 75, 75)
+			block2 = Block(550, 500, 100, 100)
+			block3 = Block(150, 150, 50, 50)
+			block4 = Block(550, 75, 50, 50)
+			block5 = Block(675, 200, 50, 50)
+			block6 = Block(650, 400, 50, 50)
+			block7 = Block(200, 500, 50, 50)
+			blocks.add(block1, block2, block3, block4, block5, block6, block7)
+		if commons.level == 5:
+			blocks.empty()
+			commons.initial_ball_pos = 50, 50
+			commons.initial_hole_pos = 750, 50
+			block1 = Block(100, 0, 100, 500)
+			block2 = Block(350, 100, 100, 500)
+			block3 = Block(600, 0, 100, 500)
+			blocks.add(block1, block2, block3)
+		if commons.level == 6:
+			blocks.empty()
+			commons.initial_ball_pos = 50, 50
+			commons.initial_hole_pos = 700, 50
+			block1 = Block(500, 0, 100, 500)
+			block2 = Block(150, 150, 75, 75)
+			block3 = Block(85, 400, 50, 50)
+			block4 = Block(375, 100, 50, 50)
+			block5 = Block(625, 375, 50, 50)
+			block6 = Block(725, 250, 50, 50)
+			block7 = Block(625, 150, 50, 50)
+			blocks.add(block1, block2, block3, block4, block5, block6, block7)
+
 		ball = Ball()
+		hole = Hole()
 		ball.initial_size_x, ball.initial_size_y = ball.image.get_size()
 		win = False
 

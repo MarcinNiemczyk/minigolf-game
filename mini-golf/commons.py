@@ -5,9 +5,10 @@ screen_height = 600
 fps = 60
 delta_time = 1 / fps
 friction = 0.981
+level = 1
 
-bg_color = (90, 170, 56)
+bg_color = (143, 248, 75)
 screen = None
 
-initial_ball_pos = (screen_width/2, screen_height/2)
-initial_hole_pos = 300, 100
+initial_ball_pos = 100, 300
+initial_hole_pos = 700, 300
