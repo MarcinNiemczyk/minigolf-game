@@ -4,7 +4,7 @@ import sys
 import vectors
 
 from ball import Ball, Pointer, Indicator
-from terrain import Hole, Block
+from terrain import Hole, Block, Gui
 
 
 def calc_velocity(mouse_pos):
@@ -20,7 +20,7 @@ def calc_velocity(mouse_pos):
 def check_screen_collisions():
 	if ball.rect.right >= commons.screen_width or ball.rect.left <= 0:
 		ball.velocity_x = -ball.velocity_x
-	if ball.rect.bottom >= commons.screen_height or ball.rect.top <= 0:
+	if ball.rect.bottom >= commons.screen_height - 75 or ball.rect.top <= 0:
 		ball.velocity_y = -ball.velocity_y
 
 
@@ -126,6 +126,7 @@ def draw():
 	blocks.draw(commons.screen)
 	indicator.draw()
 	handle_pointer_movement()
+	gui.draw()
 
 	pygame.display.update()
 
@@ -146,6 +147,7 @@ ball = Ball()
 hole = Hole()
 pointer = Pointer(ball)
 indicator = Indicator()
+gui = Gui()
 
 move = False
 force = 0
@@ -171,6 +173,8 @@ while app_running:
 					calc_velocity(pygame.mouse.get_pos())
 					move = True
 					increase_force = False
+					commons.strokes += 1
+					commons.level_strokes[commons.level-1] += 1
 
 		elif event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_SPACE:
@@ -197,50 +201,63 @@ while app_running:
 	ball.rect.centery = ball.y
 
 	if win:
+		commons.points += (1000 * (commons.level**2)) / (
+				commons.level_strokes[commons.level-1] + 1)
 		move = False
-		commons.level += 1
+		if commons.level < 6:
+			commons.level += 1
+		else:
+			commons.level = 1
+			commons.strokes = 0
+			commons.level_strokes = [0 * i for i in range(6)]
+			commons.points = 0
+
+		if commons.level == 1:
+			blocks.empty()
+			commons.initial_ball_pos = 100, 260
+			commons.initial_hole_pos = 700, 260
 		if commons.level == 2:
-			block1 = Block(150, 255, 75, 75, "white")
-			block2 = Block(350, 255, 75, 75, "white")
-			block3 = Block(550, 255, 75, 75, "white")
+			block1 = Block(150, 225, 75, 75, "white")
+			block2 = Block(350, 225, 75, 75, "white")
+			block3 = Block(550, 225, 75, 75, "white")
 			blocks.add(block1, block2, block3)
 		if commons.level == 3:
 			blocks.empty()
 			block1 = Block(350, 25, 75, 75, "white")
-			block2 = Block(350, 500, 75, 75, "white")
-			block3 = Block(500, 255, 75, 75, "white")
+			block2 = Block(350, 425, 75, 75, "white")
+			block3 = Block(500, 225, 75, 75, "white")
 			blocks.add(block1, block2, block3)
 		if commons.level == 4:
 			blocks.empty()
-			commons.initial_ball_pos = 50, 550
-			commons.initial_hole_pos = 720, 550
+			commons.initial_ball_pos = 50, 475
+			commons.initial_hole_pos = 720, 475
 			block1 = Block(350, 25, 75, 75)
-			block2 = Block(550, 500, 100, 100)
+			block2 = Block(550, 425, 100, 100)
 			block3 = Block(150, 150, 50, 50)
 			block4 = Block(550, 75, 50, 50)
 			block5 = Block(675, 200, 50, 50)
-			block6 = Block(650, 400, 50, 50)
-			block7 = Block(200, 500, 50, 50)
+			block6 = Block(650, 325, 50, 50)
+			block7 = Block(200, 425, 50, 50)
 			blocks.add(block1, block2, block3, block4, block5, block6, block7)
 		if commons.level == 5:
 			blocks.empty()
 			commons.initial_ball_pos = 50, 50
 			commons.initial_hole_pos = 750, 50
-			block1 = Block(100, 0, 100, 500)
-			block2 = Block(350, 100, 100, 500)
-			block3 = Block(600, 0, 100, 500)
+			block1 = Block(100, 0, 100, 425)
+			block2 = Block(350, 100, 100, 425)
+			block3 = Block(600, 0, 100, 425)
 			blocks.add(block1, block2, block3)
 		if commons.level == 6:
 			blocks.empty()
 			commons.initial_ball_pos = 50, 50
 			commons.initial_hole_pos = 700, 50
-			block1 = Block(500, 0, 100, 500)
+			block1 = Block(500, 0, 100, 425)
 			block2 = Block(150, 150, 75, 75)
 			block3 = Block(85, 400, 50, 50)
 			block4 = Block(375, 100, 50, 50)
-			block5 = Block(625, 375, 50, 50)
-			block6 = Block(725, 250, 50, 50)
-			block7 = Block(625, 150, 50, 50)
+			block5 = Block(625, 350, 50, 50)
+			block6 = Block(725, 225, 50, 50)
+			block7 = Block(625, 125, 50, 50)
 			blocks.add(block1, block2, block3, block4, block5, block6, block7)
 
 		ball = Ball()
