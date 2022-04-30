@@ -4,7 +4,8 @@ import sys
 import vectors
 
 from ball import Ball, Pointer, Indicator
-from terrain import Hole, Block, Gui
+from terrain import Hole, Block
+from screen import Gui
 
 
 def calc_velocity(mouse_pos):
@@ -200,6 +201,7 @@ while app_running:
 	ball.rect.centerx = ball.x
 	ball.rect.centery = ball.y
 
+	# Level increments handling
 	if win:
 		commons.points += (1000 * (commons.level**2)) / (
 				commons.level_strokes[commons.level-1] + 1)
