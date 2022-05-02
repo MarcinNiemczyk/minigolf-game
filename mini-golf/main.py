@@ -5,7 +5,7 @@ import vectors
 
 from ball import Ball, Pointer, Indicator
 from terrain import Hole, Block
-from screen import Gui
+from screen import Gui, Menu
 
 
 def calc_velocity(mouse_pos):
@@ -113,10 +113,38 @@ def handle_pointer_movement():
 		commons.screen.blit(rotated_image, origin)
 
 
+def restart_game():
+	global menu
+	commons.initial_ball_pos = 100, 260
+	commons.initial_hole_pos = 700, 260
+	commons.level = 1
+	commons.strokes = -1
+	commons.level_strokes = [0 * i for i in range(6)]
+	commons.points = 0
+	blocks.empty()
+	menu = None
+	pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+	reset_ball_position()
+	reset_hole_position()
+
+
+def reset_ball_position():
+	global ball
+	ball = Ball()
+
+
+def reset_hole_position():
+	global hole
+	hole = Hole()
+
+
 def update():
 	check_screen_collisions()
 	check_hole_collision()
 	check_block_collision()
+	if menu:
+		menu.hover_button(mouse_xy)
 
 
 def draw():
@@ -126,8 +154,11 @@ def draw():
 	ball.draw()
 	blocks.draw(commons.screen)
 	indicator.draw()
-	handle_pointer_movement()
 	gui.draw()
+	if menu:
+		menu.draw()
+	else:
+		handle_pointer_movement()
 
 	pygame.display.update()
 
@@ -154,9 +185,11 @@ move = False
 force = 0
 increase_force = False
 win = False
+menu = Menu()
 
 # The main loop for the game.
 while app_running:
+	mouse_xy = pygame.mouse.get_pos()
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
@@ -164,22 +197,33 @@ while app_running:
 
 		elif event.type == pygame.MOUSEBUTTONDOWN:
 			if event.button == pygame.BUTTON_LEFT:
-				if not move:
-					increase_force = True
-					indicator.rect = (ball.rect.right + 5, ball.rect.top - 5)
+				if not menu:
+					if not move:
+						increase_force = True
+						indicator.rect = (ball.rect.right + 5, ball.rect.top - 5)
+				else:
+					if menu.handle_button_clicks(mouse_xy, restart_game):
+						app_running = False
 
 		elif event.type == pygame.MOUSEBUTTONUP:
 			if event.button == pygame.BUTTON_LEFT:
-				if not move:
-					calc_velocity(pygame.mouse.get_pos())
-					move = True
+				if not menu and not move:
 					increase_force = False
-					commons.strokes += 1
+					calc_velocity(mouse_xy)
+					move = True
 					commons.level_strokes[commons.level-1] += 1
+					commons.strokes += 1
 
 		elif event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_SPACE:
-				ball = Ball()
+				if not menu:
+					reset_ball_position()
+			if event.key == pygame.K_ESCAPE:
+				if menu:
+					menu = None
+					pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+				else:
+					menu = Menu()
 
 	if increase_force:
 		force += 10
@@ -209,10 +253,7 @@ while app_running:
 		if commons.level < 6:
 			commons.level += 1
 		else:
-			commons.level = 1
-			commons.strokes = 0
-			commons.level_strokes = [0 * i for i in range(6)]
-			commons.points = 0
+			restart_game()
 
 		if commons.level == 1:
 			blocks.empty()
@@ -269,7 +310,6 @@ while app_running:
 
 	update()
 	draw()
-
 	clock.tick(commons.fps)
 
 pygame.quit()

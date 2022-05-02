@@ -10,6 +10,7 @@ level = 1
 strokes = 0
 level_strokes = [0 * i for i in range(6)]
 points = 0
+pars = [1, 2, 2, 3, 6, 4]
 
 bg_color = (143, 248, 75)
 screen = None
