@@ -2,9 +2,10 @@ import pygame
 import commons
 import sys
 import vectors
+import levels
 
 from ball import Ball, Pointer, Indicator
-from terrain import Hole, Block
+from terrain import Hole
 from screen import Gui, Menu
 
 
@@ -31,8 +32,8 @@ def check_hole_collision():
 	global move
 
 	# Number 4 is a margin from the hole center that allows to indicate collision.
-	if hole.rect.centerx - 4 < ball.rect.centerx < hole.rect.centerx + 4 and \
-			hole.rect.centery - 4 < ball.rect.centery < hole.rect.centery + 4:
+	if (hole.rect.centerx - 4 < ball.rect.centerx < hole.rect.centerx + 4 and
+			hole.rect.centery - 4 < ball.rect.centery < hole.rect.centery + 4):
 
 		# Move the ball towards the center of the hole.
 		diff = vectors.calc_difference(ball.rect.center, hole.rect.center)
@@ -60,6 +61,7 @@ def check_hole_collision():
 
 
 def check_block_collision():
+	"""Check if terrain blocks collide with the ball."""
 	collide_object = pygame.sprite.spritecollide(ball, blocks, False)
 	if collide_object:
 		if collide_object[0].rect.collidepoint(ball.rect.midleft):
@@ -115,18 +117,34 @@ def handle_pointer_movement():
 
 def restart_game():
 	global menu
-	commons.initial_ball_pos = 100, 260
-	commons.initial_hole_pos = 700, 260
-	commons.level = 1
-	commons.strokes = -1
-	commons.level_strokes = [0 * i for i in range(6)]
-	commons.points = 0
-	blocks.empty()
+
+	reset_stats()
 	menu = None
 	pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
+	initiate_game_levels()
+
 	reset_ball_position()
 	reset_hole_position()
+
+
+def initiate_game_levels():
+	global levels_iter
+	global level
+	global blocks
+
+	levels_iter = levels.generate_level()
+	level = next(levels_iter)
+	commons.initial_ball_pos = level.ball_pos
+	commons.initial_hole_pos = level.hole_pos
+	blocks = level.blocks
+
+
+def reset_stats():
+	commons.level = 1
+	commons.strokes = 0
+	commons.level_strokes = [0 * i for i in range(6)]
+	commons.points = 0
 
 
 def reset_ball_position():
@@ -173,8 +191,8 @@ pygame.display.set_caption("Mini-Golf")
 icon_image = pygame.image.load("images/ball.png").convert_alpha()
 pygame.display.set_icon(icon_image)
 
-blocks = pygame.sprite.Group()
-
+levels_iter = levels.generate_level()
+initiate_game_levels()
 ball = Ball()
 hole = Hole()
 pointer = Pointer(ball)
@@ -201,18 +219,19 @@ while app_running:
 					if not move:
 						increase_force = True
 						indicator.rect = (ball.rect.right + 5, ball.rect.top - 5)
-				else:
-					if menu.handle_button_clicks(mouse_xy, restart_game):
-						app_running = False
 
 		elif event.type == pygame.MOUSEBUTTONUP:
 			if event.button == pygame.BUTTON_LEFT:
-				if not menu and not move:
-					increase_force = False
-					calc_velocity(mouse_xy)
-					move = True
-					commons.level_strokes[commons.level-1] += 1
-					commons.strokes += 1
+				if not menu:
+					if not move:
+						increase_force = False
+						calc_velocity(mouse_xy)
+						move = True
+						commons.level_strokes[commons.level - 1] += 1
+						commons.strokes += 1
+				else:
+					if menu.handle_button_clicks(mouse_xy, restart_game):
+						app_running = False
 
 		elif event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_SPACE:
@@ -250,61 +269,17 @@ while app_running:
 		commons.points += (1000 * (commons.level**2)) / (
 				commons.level_strokes[commons.level-1] + 1)
 		move = False
-		if commons.level < 6:
+		try:
+			level = next(levels_iter)
+			commons.initial_ball_pos = level.ball_pos
+			commons.initial_hole_pos = level.hole_pos
+			blocks = level.blocks
 			commons.level += 1
-		else:
+		except StopIteration:
 			restart_game()
 
-		if commons.level == 1:
-			blocks.empty()
-			commons.initial_ball_pos = 100, 260
-			commons.initial_hole_pos = 700, 260
-		if commons.level == 2:
-			block1 = Block(150, 225, 75, 75, "white")
-			block2 = Block(350, 225, 75, 75, "white")
-			block3 = Block(550, 225, 75, 75, "white")
-			blocks.add(block1, block2, block3)
-		if commons.level == 3:
-			blocks.empty()
-			block1 = Block(350, 25, 75, 75, "white")
-			block2 = Block(350, 425, 75, 75, "white")
-			block3 = Block(500, 225, 75, 75, "white")
-			blocks.add(block1, block2, block3)
-		if commons.level == 4:
-			blocks.empty()
-			commons.initial_ball_pos = 50, 475
-			commons.initial_hole_pos = 720, 475
-			block1 = Block(350, 25, 75, 75)
-			block2 = Block(550, 425, 100, 100)
-			block3 = Block(150, 150, 50, 50)
-			block4 = Block(550, 75, 50, 50)
-			block5 = Block(675, 200, 50, 50)
-			block6 = Block(650, 325, 50, 50)
-			block7 = Block(200, 425, 50, 50)
-			blocks.add(block1, block2, block3, block4, block5, block6, block7)
-		if commons.level == 5:
-			blocks.empty()
-			commons.initial_ball_pos = 50, 50
-			commons.initial_hole_pos = 750, 50
-			block1 = Block(100, 0, 100, 425)
-			block2 = Block(350, 100, 100, 425)
-			block3 = Block(600, 0, 100, 425)
-			blocks.add(block1, block2, block3)
-		if commons.level == 6:
-			blocks.empty()
-			commons.initial_ball_pos = 50, 50
-			commons.initial_hole_pos = 700, 50
-			block1 = Block(500, 0, 100, 425)
-			block2 = Block(150, 150, 75, 75)
-			block3 = Block(85, 400, 50, 50)
-			block4 = Block(375, 100, 50, 50)
-			block5 = Block(625, 350, 50, 50)
-			block6 = Block(725, 225, 50, 50)
-			block7 = Block(625, 125, 50, 50)
-			blocks.add(block1, block2, block3, block4, block5, block6, block7)
-
-		ball = Ball()
-		hole = Hole()
+		reset_ball_position()
+		reset_hole_position()
 		ball.initial_size_x, ball.initial_size_y = ball.image.get_size()
 		win = False
 

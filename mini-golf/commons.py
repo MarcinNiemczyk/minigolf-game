@@ -15,5 +15,5 @@ pars = [1, 2, 2, 3, 6, 4]
 bg_color = (143, 248, 75)
 screen = None
 
-initial_ball_pos = 100, 260
-initial_hole_pos = 700, 260
+initial_ball_pos = None
+initial_hole_pos = None

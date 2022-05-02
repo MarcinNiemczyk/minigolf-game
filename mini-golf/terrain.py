@@ -21,5 +21,7 @@ class Block(Sprite):
 		self.image = pygame.Surface([width, height])
 		self.rect = self.image.get_rect()
 		self.rect.topleft = pos_x, pos_y
+
+		# Render smaller rect allows to make a black border around the block
 		pygame.draw.rect(self.image, color, (3, 3, width-6, height-6),
 		                 border_radius=8)
