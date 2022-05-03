@@ -6,7 +6,7 @@ import levels
 
 from ball import Ball, Pointer, Indicator
 from terrain import Hole
-from screen import Gui, Menu
+from screen import Gui, Menu, EndScreen
 
 
 def calc_velocity(mouse_pos):
@@ -117,9 +117,11 @@ def handle_pointer_movement():
 
 def restart_game():
 	global menu
+	global end_screen
 
 	reset_stats()
 	menu = None
+	end_screen = None
 	pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
 	initiate_game_levels()
@@ -163,6 +165,8 @@ def update():
 	check_block_collision()
 	if menu:
 		menu.hover_button(mouse_xy)
+	if end_screen:
+		end_screen.hover_button(mouse_xy)
 
 
 def draw():
@@ -175,7 +179,9 @@ def draw():
 	gui.draw()
 	if menu:
 		menu.draw()
-	else:
+	if end_screen:
+		end_screen.draw()
+	if not menu and not end_screen:
 		handle_pointer_movement()
 
 	pygame.display.update()
@@ -204,6 +210,7 @@ force = 0
 increase_force = False
 win = False
 menu = Menu()
+end_screen = None
 
 # The main loop for the game.
 while app_running:
@@ -215,22 +222,25 @@ while app_running:
 
 		elif event.type == pygame.MOUSEBUTTONDOWN:
 			if event.button == pygame.BUTTON_LEFT:
-				if not menu:
+				if not menu and not end_screen:
 					if not move:
 						increase_force = True
 						indicator.rect = (ball.rect.right + 5, ball.rect.top - 5)
 
 		elif event.type == pygame.MOUSEBUTTONUP:
 			if event.button == pygame.BUTTON_LEFT:
-				if not menu:
+				if not menu and not end_screen:
 					if not move:
 						increase_force = False
 						calc_velocity(mouse_xy)
 						move = True
 						commons.level_strokes[commons.level - 1] += 1
 						commons.strokes += 1
-				else:
+				elif menu:
 					if menu.handle_button_clicks(mouse_xy, restart_game):
+						app_running = False
+				elif end_screen:
+					if end_screen.handle_button_clicks(mouse_xy, restart_game):
 						app_running = False
 
 		elif event.type == pygame.KEYDOWN:
@@ -238,11 +248,12 @@ while app_running:
 				if not menu:
 					reset_ball_position()
 			if event.key == pygame.K_ESCAPE:
-				if menu:
-					menu = None
-					pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-				else:
-					menu = Menu()
+				if not end_screen:
+					if menu:
+						menu = None
+						pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+					else:
+						menu = Menu()
 
 	if increase_force:
 		force += 10
@@ -276,7 +287,7 @@ while app_running:
 			blocks = level.blocks
 			commons.level += 1
 		except StopIteration:
-			restart_game()
+			end_screen = EndScreen()
 
 		reset_ball_position()
 		reset_hole_position()

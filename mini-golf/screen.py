@@ -48,6 +48,7 @@ class Menu:
 		                (self.button_h2p, self.default_color),
 		                (self.button_exit, self.default_color),
 		                (self.button_back, self.default_color)]
+		self.button_font = pygame.font.SysFont('Comic Sans MS', 24)
 
 	def draw(self):
 		heading_font = pygame.font.SysFont('Arial Bold', 48)
@@ -76,10 +77,9 @@ class Menu:
 			pygame.draw.rect(commons.screen, self.buttons[2][1],
 			                 self.buttons[2][0])
 
-			button_font = pygame.font.SysFont('Comic Sans MS', 24)
-			button_restart_text = button_font.render("Start", False, "white")
-			button_h2p_text = button_font.render("How To Play", False, "white")
-			button_exit_text = button_font.render("Exit", False, "white")
+			button_restart_text = self.button_font.render("Start", False, "white")
+			button_h2p_text = self.button_font.render("How To Play", False, "white")
+			button_exit_text = self.button_font.render("Exit", False, "white")
 			heading2_font = pygame.font.SysFont('Arial Bold', 32)
 			continue_text = heading2_font.render("Press ESC to resume", True,
 			                                     "white")
@@ -123,7 +123,7 @@ class Menu:
 
 	def hover_button(self, mouse_pos):
 		"""Handle hover by changing proper button color and mouse cursor."""
-		collide = [False for i in range(len(self.buttons))]
+		collide = [False for _ in range(len(self.buttons))]
 
 		for index, (rect, color) in enumerate(self.buttons):
 			if rect.collidepoint(mouse_pos):
@@ -142,7 +142,60 @@ class Menu:
 			restart_game_func()
 		if self.button_h2p.collidepoint(mouse_pos):
 			self.h2p_menu = True
-		if self.button_exit.collidepoint(mouse_pos):
-			return True
 		if self.button_back.collidepoint(mouse_pos):
 			self.h2p_menu = False
+		if self.button_exit.collidepoint(mouse_pos):
+			return True
+
+
+class EndScreen(Menu):
+	"""A class to draw end game menu after finish the last level."""
+	def __init__(self):
+		super().__init__()
+
+		self.button_restart = pygame.Rect(270, 370, 170, 40)
+		self.button_exit = pygame.Rect(455, 370, 80, 40)
+		self.buttons = [(self.button_restart, self.default_color),
+		                (self.button_exit, self.default_color)]
+
+	def draw(self):
+		commons.screen.blit(self.image, self.rect)
+		pygame.draw.rect(commons.screen, self.buttons[0][1], self.buttons[0][0])
+		pygame.draw.rect(commons.screen, self.buttons[1][1], self.buttons[1][0])
+
+		try_again_text = self.button_font.render("Try again", False, "white")
+		exit_text = self.button_font.render("Exit", False, "white")
+
+		commons.screen.blit(try_again_text, (300, 373))
+		commons.screen.blit(exit_text, (470, 371))
+
+		stats_font = pygame.font.SysFont('DejaVu Sans Mono', 24)
+		stats = [
+			('HOLE', '1', '2', '3', '4', '5', '6'),
+			('PAR', str(commons.pars[0]), str(commons.pars[1]), str(commons.pars[2]),
+			 str(commons.pars[3]), str(commons.pars[4]), str(commons.pars[5])),
+			('STROKE', str(commons.level_strokes[0]), str(commons.level_strokes[1]),
+			 str(commons.level_strokes[2]), str(commons.level_strokes[3]),
+			 str(commons.level_strokes[4]), str(commons.level_strokes[5]))
+		]
+
+		# Draw stats table
+		width = 6
+		y = 80
+		for i in range(7):
+			stats_table = stats_font.render(
+				("{} {} {}".format(stats[0][i].center(width),
+				                   stats[1][i].center(width),
+				                   stats[2][i].center(width))),
+				False, "white")
+			commons.screen.blit(stats_table, (255, y))
+			y += 32
+
+		divider = pygame.Rect(270, 310, 260, 1)
+		pygame.draw.rect(commons.screen, "white", divider)
+
+		points_str = str(int(commons.points))
+		score_text = stats_font.render("SCORE: " + points_str, False, "white")
+
+		# Reduce x value so that the number of points fit to the menu border
+		commons.screen.blit(score_text, (390 - len(points_str)*5, 320))
