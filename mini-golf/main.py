@@ -21,8 +21,10 @@ def calc_velocity(mouse_pos):
 
 def check_screen_collisions():
 	if ball.rect.right >= commons.screen_width or ball.rect.left <= 0:
+		handle_bounce_sounds(ball.velocity_x)
 		ball.velocity_x = -ball.velocity_x
 	if ball.rect.bottom >= commons.screen_height - 75 or ball.rect.top <= 0:
+		handle_bounce_sounds(ball.velocity_y)
 		ball.velocity_y = -ball.velocity_y
 
 
@@ -30,10 +32,15 @@ def check_hole_collision():
 	"""Check if the ball collide with the hole field and simulate a fall."""
 	global win
 	global move
+	global play_hole_sound
 
 	# Number 4 is a margin from the hole center that allows to indicate collision.
 	if (hole.rect.centerx - 4 < ball.rect.centerx < hole.rect.centerx + 4 and
 			hole.rect.centery - 4 < ball.rect.centery < hole.rect.centery + 4):
+
+		if play_hole_sound:
+			hole_pop_sound.play()
+			play_hole_sound = False
 
 		# Move the ball towards the center of the hole.
 		diff = vectors.calc_difference(ball.rect.center, hole.rect.center)
@@ -66,12 +73,16 @@ def check_block_collision():
 	if collide_object:
 		if collide_object[0].rect.collidepoint(ball.rect.midleft):
 			ball.velocity_x = -ball.velocity_x
+			handle_bounce_sounds(ball.velocity_x)
 		if collide_object[0].rect.collidepoint(ball.rect.midright):
 			ball.velocity_x = -ball.velocity_x
+			handle_bounce_sounds(ball.velocity_x)
 		if collide_object[0].rect.collidepoint(ball.rect.midtop):
 			ball.velocity_y = -ball.velocity_y
+			handle_bounce_sounds(ball.velocity_y)
 		if collide_object[0].rect.collidepoint(ball.rect.midbottom):
 			ball.velocity_y = -ball.velocity_y
+			handle_bounce_sounds(ball.velocity_y)
 
 
 def handle_ball_movement():
@@ -90,6 +101,30 @@ def handle_ball_movement():
 		ball.velocity_y = 0
 	if -10 < ball.velocity_y <= 0:
 		ball.velocity_y = 0
+
+
+def handle_hit_sounds():
+	if 0 < force <= 300:
+		hit_sound_4.play()
+	elif 300 < force <= 700:
+		hit_sound_3.play()
+	elif 600 < force <= 1000:
+		hit_sound_2.play()
+	else:
+		hit_sound_1.play()
+
+
+def handle_bounce_sounds(velocity):
+	velocity = abs(velocity)
+
+	if 10 < velocity <= 200:
+		hit_sound_4.play()
+	elif 200 < velocity <= 500:
+		hit_sound_3.play()
+	elif 500 < velocity <= 800:
+		hit_sound_2.play()
+	else:
+		hit_sound_1.play()
 
 
 def handle_pointer_movement():
@@ -241,6 +276,16 @@ menu = Menu()
 end_screen = None
 sub_menu = None
 
+hit_sound_1 = pygame.mixer.Sound('sounds/ball_hit_1.ogg')
+hit_sound_2 = pygame.mixer.Sound('sounds/ball_hit_2.ogg')
+hit_sound_3 = pygame.mixer.Sound('sounds/ball_hit_3.ogg')
+hit_sound_4 = pygame.mixer.Sound('sounds/ball_hit_4.ogg')
+bounce_sound = pygame.mixer.Sound('sounds/ball_bounce.ogg')
+end_sound = pygame.mixer.Sound('sounds/end_sound.ogg')
+hole_pop_sound = pygame.mixer.Sound('sounds/hole_pop.ogg')
+play_hole_sound = True
+
+
 # The main loop for the game.
 while game_active:
 	mouse_xy = pygame.mouse.get_pos()
@@ -266,6 +311,7 @@ while game_active:
 						if force > 10:
 							commons.level_strokes[commons.level - 1] += 1
 							commons.strokes += 1
+							handle_hit_sounds()
 				else:
 					handle_button_clicks(mouse_xy)
 
@@ -316,11 +362,13 @@ while game_active:
 			menu = None
 			sub_menu = None
 			end_screen = EndScreen()
+			end_sound.play()
 
 		reset_ball_position()
 		reset_hole_position()
 		ball.initial_size_x, ball.initial_size_y = ball.image.get_size()
 		win = False
+		play_hole_sound = True
 
 	update()
 	draw()
