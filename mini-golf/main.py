@@ -263,8 +263,9 @@ while game_active:
 						increase_force = False
 						calc_velocity(mouse_xy)
 						move = True
-						commons.level_strokes[commons.level - 1] += 1
-						commons.strokes += 1
+						if force > 10:
+							commons.level_strokes[commons.level - 1] += 1
+							commons.strokes += 1
 				else:
 					handle_button_clicks(mouse_xy)
 
