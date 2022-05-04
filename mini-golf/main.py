@@ -20,10 +20,16 @@ def calc_velocity(mouse_pos):
 
 
 def check_screen_collisions():
-	if ball.rect.right >= commons.screen_width or ball.rect.left <= 0:
+	if ball.velocity_x < 0 and ball.rect.left <= 0:
 		handle_bounce_sounds(ball.velocity_x)
 		ball.velocity_x = -ball.velocity_x
-	if ball.rect.bottom >= commons.screen_height - 75 or ball.rect.top <= 0:
+	if ball.velocity_y < 0 and ball.rect.top <= 0:
+		handle_bounce_sounds(ball.velocity_y)
+		ball.velocity_y = -ball.velocity_y
+	if ball.velocity_x > 0 and ball.rect.right >= commons.screen_width:
+		handle_bounce_sounds(ball.velocity_x)
+		ball.velocity_x = -ball.velocity_x
+	if ball.velocity_y > 0 and ball.rect.bottom >= commons.screen_height - 75:
 		handle_bounce_sounds(ball.velocity_y)
 		ball.velocity_y = -ball.velocity_y
 
@@ -36,7 +42,7 @@ def check_hole_collision():
 
 	# Number 4 is a margin from the hole center that allows to indicate collision.
 	if (hole.rect.centerx - 4 < ball.rect.centerx < hole.rect.centerx + 4 and
-			hole.rect.centery - 4 < ball.rect.centery < hole.rect.centery + 4):
+		  hole.rect.centery - 4 < ball.rect.centery < hole.rect.centery + 4):
 
 		if play_hole_sound:
 			hole_pop_sound.play()
@@ -71,16 +77,21 @@ def check_block_collision():
 	"""Check if terrain blocks collide with the ball."""
 	collide_object = pygame.sprite.spritecollide(ball, blocks, False)
 	if collide_object:
-		if collide_object[0].rect.collidepoint(ball.rect.midleft):
+		# Add 25 pixels margin in case of high velocity
+		if (abs(ball.rect.left - collide_object[0].rect.right) < 25 and
+			  ball.velocity_x < 0):
 			ball.velocity_x = -ball.velocity_x
 			handle_bounce_sounds(ball.velocity_x)
-		if collide_object[0].rect.collidepoint(ball.rect.midright):
-			ball.velocity_x = -ball.velocity_x
-			handle_bounce_sounds(ball.velocity_x)
-		if collide_object[0].rect.collidepoint(ball.rect.midtop):
+		elif (abs(ball.rect.top - collide_object[0].rect.bottom) < 25 and
+		      ball.velocity_y < 0):
 			ball.velocity_y = -ball.velocity_y
 			handle_bounce_sounds(ball.velocity_y)
-		if collide_object[0].rect.collidepoint(ball.rect.midbottom):
+		elif (abs(ball.rect.right - collide_object[0].rect.left) < 25 and
+		      ball.velocity_x > 0):
+			ball.velocity_x = -ball.velocity_x
+			handle_bounce_sounds(ball.velocity_x)
+		elif (abs(ball.rect.bottom - collide_object[0].rect.top) < 25 and
+		      ball.velocity_y > 0):
 			ball.velocity_y = -ball.velocity_y
 			handle_bounce_sounds(ball.velocity_y)
 
@@ -285,7 +296,6 @@ end_sound = pygame.mixer.Sound('sounds/end_sound.ogg')
 hole_pop_sound = pygame.mixer.Sound('sounds/hole_pop.ogg')
 play_hole_sound = True
 
-
 # The main loop for the game.
 while game_active:
 	mouse_xy = pygame.mouse.get_pos()
@@ -299,7 +309,7 @@ while game_active:
 				if not menu and not end_screen and not sub_menu:
 					if not move:
 						increase_force = True
-						indicator.rect = (ball.rect.right + 5, ball.rect.top - 5)
+						indicator.rect = ball.rect.right + 5, ball.rect.top - 5
 
 		elif event.type == pygame.MOUSEBUTTONUP:
 			if event.button == pygame.BUTTON_LEFT:
@@ -349,8 +359,8 @@ while game_active:
 
 	# Level increments handling
 	if win:
-		commons.points += (1000 * (commons.level**2)) / (
-				commons.level_strokes[commons.level-1] + 1)
+		commons.points += (1000 * (commons.level ** 2)) / (
+				commons.level_strokes[commons.level - 1] + 1)
 		move = False
 		try:
 			level = next(levels_iter)
