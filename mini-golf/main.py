@@ -6,7 +6,7 @@ import levels
 
 from ball import Ball, Pointer, Indicator
 from terrain import Hole
-from screen import Gui, Menu, EndScreen
+from screen import Gui, Menu, EndScreen, HowToPlayMenu
 
 
 def calc_velocity(mouse_pos):
@@ -115,6 +115,30 @@ def handle_pointer_movement():
 		commons.screen.blit(rotated_image, origin)
 
 
+def handle_button_clicks(mouse_pos):
+	global menu
+	global game_active
+	global sub_menu
+
+	if menu:
+		if menu.button_restart.collidepoint(mouse_pos):
+			restart_game()
+		elif menu.button_exit.collidepoint(mouse_pos):
+			game_active = False
+		elif menu.button_h2p.collidepoint(mouse_pos):
+			sub_menu = HowToPlayMenu()
+			menu = None
+	if sub_menu:
+		if sub_menu.button_back.collidepoint(mouse_pos):
+			menu = Menu()
+			sub_menu = None
+	if end_screen:
+		if end_screen.button_restart.collidepoint(mouse_pos):
+			restart_game()
+		elif end_screen.button_exit.collidepoint(mouse_pos):
+			game_active = False
+
+
 def restart_game():
 	global menu
 	global end_screen
@@ -165,6 +189,8 @@ def update():
 	check_block_collision()
 	if menu:
 		menu.hover_button(mouse_xy)
+	if sub_menu:
+		sub_menu.hover_button(mouse_xy)
 	if end_screen:
 		end_screen.hover_button(mouse_xy)
 
@@ -181,14 +207,16 @@ def draw():
 		menu.draw()
 	if end_screen:
 		end_screen.draw()
-	if not menu and not end_screen:
+	if sub_menu:
+		sub_menu.draw()
+	if not menu and not sub_menu and not end_screen:
 		handle_pointer_movement()
 
 	pygame.display.update()
 
 
 pygame.init()
-app_running = True
+game_active = True
 
 clock = pygame.time.Clock()
 commons.screen = pygame.display.set_mode((commons.screen_width,
@@ -211,44 +239,41 @@ increase_force = False
 win = False
 menu = Menu()
 end_screen = None
+sub_menu = None
 
 # The main loop for the game.
-while app_running:
+while game_active:
 	mouse_xy = pygame.mouse.get_pos()
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
-			app_running = False
+			game_active = False
 
 		elif event.type == pygame.MOUSEBUTTONDOWN:
 			if event.button == pygame.BUTTON_LEFT:
-				if not menu and not end_screen:
+				if not menu and not end_screen and not sub_menu:
 					if not move:
 						increase_force = True
 						indicator.rect = (ball.rect.right + 5, ball.rect.top - 5)
 
 		elif event.type == pygame.MOUSEBUTTONUP:
 			if event.button == pygame.BUTTON_LEFT:
-				if not menu and not end_screen:
+				if not menu and not end_screen and not sub_menu:
 					if not move:
 						increase_force = False
 						calc_velocity(mouse_xy)
 						move = True
 						commons.level_strokes[commons.level - 1] += 1
 						commons.strokes += 1
-				elif menu:
-					if menu.handle_button_clicks(mouse_xy, restart_game):
-						app_running = False
-				elif end_screen:
-					if end_screen.handle_button_clicks(mouse_xy, restart_game):
-						app_running = False
+				else:
+					handle_button_clicks(mouse_xy)
 
 		elif event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_SPACE:
 				if not menu:
 					reset_ball_position()
 			if event.key == pygame.K_ESCAPE:
-				if not end_screen:
+				if not end_screen and not sub_menu:
 					if menu:
 						menu = None
 						pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
@@ -287,6 +312,8 @@ while app_running:
 			blocks = level.blocks
 			commons.level += 1
 		except StopIteration:
+			menu = None
+			sub_menu = None
 			end_screen = EndScreen()
 
 		reset_ball_position()
