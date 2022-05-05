@@ -256,6 +256,7 @@ while game_active:
 		ball = Ball()
 		hole = Hole()
 		show_menu = False
+		show_end_screen = False
 		restart_game = False
 
 	for event in pygame.event.get():
@@ -347,9 +348,9 @@ while game_active:
 			blocks = level.blocks
 			commons.level += 1
 		except StopIteration:
-			menu = None
-			submenu = None
-			end_screen = EndScreen()
+			show_menu = False
+			show_submenu = False
+			show_end_screen = True
 			end_sound.play()
 
 		ball = Ball()
