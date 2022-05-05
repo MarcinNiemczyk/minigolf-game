@@ -17,6 +17,12 @@ Mini-golf is a simple Python 2d game with golf features. 🐍
 - pygame
 
 ## Background
-Game fully developed and designed, every detail created by hand, each sound effect is dedicated. It is the first project by martindustry.
+Game fully developed and designed, graphics created using GIMP, each sound effect is dedicated. It is the first project by martindustry.
 
 ## Installation
+You can download the game from [itch.io](https://martindustry.itch.io/mini-golf).
+```
+  1. Download zip file
+  2. Exctract
+  3. Run mini-golf.exe
+```
