@@ -35,22 +35,17 @@ def check_screen_collisions():
 
 
 def check_hole_collision():
-	"""Check if the ball collide with the hole field and simulate a fall."""
-	global win
-	global move
-	global play_hole_sound
-
+	"""Check if the ball collide with the hole field."""
 	# Number 4 is a margin from the hole center that allows to indicate collision.
-	if (hole.rect.centerx - 4 < ball.rect.centerx < hole.rect.centerx + 4 and
-		  hole.rect.centery - 4 < ball.rect.centery < hole.rect.centery + 4):
+	return (hole.rect.centerx - 4 < ball.rect.centerx < hole.rect.centerx + 4 and
+	        hole.rect.centery - 4 < ball.rect.centery < hole.rect.centery + 4)
 
-		if play_hole_sound:
-			hole_pop_sound.play()
-			play_hole_sound = False
 
+def handle_hole_animation():
+	"""Handle ball falling into the hole animation and return True if it ends."""
+	if check_hole_collision():
 		# Move the ball towards the center of the hole.
 		diff = vectors.calc_difference(ball.rect.center, hole.rect.center)
-		move = True
 		ball.velocity_x = diff[0]
 		ball.velocity_y = diff[1]
 		ball.x += ball.velocity_x * 0.4
@@ -69,8 +64,8 @@ def check_hole_collision():
 			ball.initial_size_x -= 0.3
 			ball.initial_size_y -= 0.3
 
-	if ball.image.get_size() == (3, 3):
-		win = True
+		if ball.image.get_size() == (3, 3):
+			return True
 
 
 def check_block_collision():
@@ -140,7 +135,7 @@ def handle_bounce_sounds(velocity):
 
 def handle_pointer_movement():
 	"""Rotate the pointer image correct to follow the mouse cursor."""
-	if move:
+	if move or check_hole_collision():
 		pointer.rect = 0, 0
 	else:
 		pointer.rect = ball.rect.center
@@ -161,57 +156,6 @@ def handle_pointer_movement():
 		commons.screen.blit(rotated_image, origin)
 
 
-def handle_button_clicks(mouse_pos):
-	global menu
-	global game_active
-	global sub_menu
-
-	if menu:
-		if menu.button_restart.collidepoint(mouse_pos):
-			restart_game()
-		elif menu.button_exit.collidepoint(mouse_pos):
-			game_active = False
-		elif menu.button_h2p.collidepoint(mouse_pos):
-			sub_menu = HowToPlayMenu()
-			menu = None
-	if sub_menu:
-		if sub_menu.button_back.collidepoint(mouse_pos):
-			menu = Menu()
-			sub_menu = None
-	if end_screen:
-		if end_screen.button_restart.collidepoint(mouse_pos):
-			restart_game()
-		elif end_screen.button_exit.collidepoint(mouse_pos):
-			game_active = False
-
-
-def restart_game():
-	global menu
-	global end_screen
-
-	reset_stats()
-	menu = None
-	end_screen = None
-	pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-
-	initiate_game_levels()
-
-	reset_ball_position()
-	reset_hole_position()
-
-
-def initiate_game_levels():
-	global levels_iter
-	global level
-	global blocks
-
-	levels_iter = levels.generate_level()
-	level = next(levels_iter)
-	commons.initial_ball_pos = level.ball_pos
-	commons.initial_hole_pos = level.hole_pos
-	blocks = level.blocks
-
-
 def reset_stats():
 	commons.level = 1
 	commons.strokes = 0
@@ -219,25 +163,15 @@ def reset_stats():
 	commons.points = 0
 
 
-def reset_ball_position():
-	global ball
-	ball = Ball()
-
-
-def reset_hole_position():
-	global hole
-	hole = Hole()
-
-
 def update():
 	check_screen_collisions()
-	check_hole_collision()
 	check_block_collision()
-	if menu:
+	handle_hole_animation()
+	if show_menu:
 		menu.hover_button(mouse_xy)
-	if sub_menu:
-		sub_menu.hover_button(mouse_xy)
-	if end_screen:
+	if show_submenu:
+		submenu.hover_button(mouse_xy)
+	if show_end_screen:
 		end_screen.hover_button(mouse_xy)
 
 
@@ -247,16 +181,18 @@ def draw():
 	hole.draw()
 	ball.draw()
 	blocks.draw(commons.screen)
-	indicator.draw()
+	if show_indicator:
+		indicator.draw()
 	gui.draw()
-	if menu:
+	if show_menu:
 		menu.draw()
-	if end_screen:
+	if show_submenu:
+		submenu.draw()
+	if show_end_screen:
 		end_screen.draw()
-	if sub_menu:
-		sub_menu.draw()
-	if not menu and not sub_menu and not end_screen:
+	if not show_menu and not show_submenu and not show_end_screen:
 		handle_pointer_movement()
+		pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
 	pygame.display.update()
 
@@ -272,7 +208,11 @@ icon_image = pygame.image.load("images/ball.png").convert_alpha()
 pygame.display.set_icon(icon_image)
 
 levels_iter = levels.generate_level()
-initiate_game_levels()
+level = next(levels_iter)
+commons.initial_ball_pos = level.ball_pos
+commons.initial_hole_pos = level.hole_pos
+blocks = level.blocks
+
 ball = Ball()
 hole = Hole()
 pointer = Pointer(ball)
@@ -284,8 +224,13 @@ force = 0
 increase_force = False
 win = False
 menu = Menu()
-end_screen = None
-sub_menu = None
+end_screen = EndScreen()
+submenu = HowToPlayMenu()
+show_menu = True
+show_submenu = False
+show_end_screen = False
+show_indicator = False
+restart_game = False
 
 hit_sound_1 = pygame.mixer.Sound('sounds/ball_hit_1.ogg')
 hit_sound_2 = pygame.mixer.Sound('sounds/ball_hit_2.ogg')
@@ -293,12 +238,25 @@ hit_sound_3 = pygame.mixer.Sound('sounds/ball_hit_3.ogg')
 hit_sound_4 = pygame.mixer.Sound('sounds/ball_hit_4.ogg')
 bounce_sound = pygame.mixer.Sound('sounds/ball_bounce.ogg')
 end_sound = pygame.mixer.Sound('sounds/end_sound.ogg')
-hole_pop_sound = pygame.mixer.Sound('sounds/hole_pop.ogg')
+hole_sound = pygame.mixer.Sound('sounds/hole_pop.ogg')
 play_hole_sound = True
 
 # The main loop for the game.
 while game_active:
 	mouse_xy = pygame.mouse.get_pos()
+
+	# handle game restart
+	if restart_game:
+		levels_iter = levels.generate_level()
+		level = next(levels_iter)
+		commons.initial_ball_pos = level.ball_pos
+		commons.initial_hole_pos = level.hole_pos
+		blocks = level.blocks
+		reset_stats()
+		ball = Ball()
+		hole = Hole()
+		show_menu = False
+		restart_game = False
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
@@ -306,14 +264,34 @@ while game_active:
 
 		elif event.type == pygame.MOUSEBUTTONDOWN:
 			if event.button == pygame.BUTTON_LEFT:
-				if not menu and not end_screen and not sub_menu:
+				if not show_menu and not show_end_screen and not show_submenu:
 					if not move:
 						increase_force = True
+						show_indicator = True
 						indicator.rect = ball.rect.right + 5, ball.rect.top - 5
 
 		elif event.type == pygame.MOUSEBUTTONUP:
 			if event.button == pygame.BUTTON_LEFT:
-				if not menu and not end_screen and not sub_menu:
+				if show_menu:
+					if menu.button_restart.collidepoint(mouse_xy):
+						restart_game = True
+						show_menu = False
+					elif menu.button_exit.collidepoint(mouse_xy):
+						game_active = False
+					elif menu.button_h2p.collidepoint(mouse_xy):
+						show_submenu = True
+						show_menu = False
+				elif show_submenu:
+					if submenu.button_back.collidepoint(mouse_xy):
+						show_menu = True
+						show_submenu = False
+				elif show_end_screen:
+					if end_screen.button_restart.collidepoint(mouse_xy):
+						restart_game = True
+						show_menu = False
+					elif end_screen.button_exit.collidepoint(mouse_xy):
+						game_active = False
+				else:
 					if not move:
 						increase_force = False
 						calc_velocity(mouse_xy)
@@ -322,20 +300,16 @@ while game_active:
 							commons.level_strokes[commons.level - 1] += 1
 							commons.strokes += 1
 							handle_hit_sounds()
-				else:
-					handle_button_clicks(mouse_xy)
 
 		elif event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_SPACE:
-				if not menu:
-					reset_ball_position()
+				if not show_menu or not show_submenu or not show_end_screen:
+					ball = Ball()
 			if event.key == pygame.K_ESCAPE:
-				if not end_screen and not sub_menu:
-					if menu:
-						menu = None
-						pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-					else:
-						menu = Menu()
+				if show_menu:
+					show_menu = False
+				else:
+					show_menu = True
 
 	if increase_force:
 		force += 10
@@ -348,8 +322,8 @@ while game_active:
 	indicator.increase(force)
 
 	if move:
+		show_indicator = False
 		handle_ball_movement()
-		indicator.rect = -100, -100
 		force = 0
 	if ball.velocity_x == 0 and ball.velocity_y == 0:
 		move = False
@@ -357,8 +331,12 @@ while game_active:
 	ball.rect.centerx = ball.x
 	ball.rect.centery = ball.y
 
+	if check_hole_collision() and play_hole_sound:
+		play_hole_sound = False
+		hole_sound.play()
+
 	# Level increments handling
-	if win:
+	if handle_hole_animation():
 		commons.points += (1000 * (commons.level ** 2)) / (
 				commons.level_strokes[commons.level - 1] + 1)
 		move = False
@@ -370,12 +348,12 @@ while game_active:
 			commons.level += 1
 		except StopIteration:
 			menu = None
-			sub_menu = None
+			submenu = None
 			end_screen = EndScreen()
 			end_sound.play()
 
-		reset_ball_position()
-		reset_hole_position()
+		ball = Ball()
+		hole = Hole()
 		ball.initial_size_x, ball.initial_size_y = ball.image.get_size()
 		win = False
 		play_hole_sound = True
