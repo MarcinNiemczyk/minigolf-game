@@ -1,6 +1,7 @@
 ![mini-golf logo banner](https://i.imgur.com/dm9FbWw.png) 
 
-[![CodeFactor](https://www.codefactor.io/repository/github/martindustry/pygames/badge/main?style=for-the-badge)](https://www.codefactor.io/repository/github/martindustry/pygames/overview/main) [![LastCommit](https://img.shields.io/github/last-commit/martindustry/pygames?style=for-the-badge)](https://github.com/martindustry/pygames/commits/main)
+[![CodeFactor](https://www.codefactor.io/repository/github/martindustry/minigolf-game/badge/main?style=for-the-badge)](https://www.codefactor.io/repository/github/martindustry/minigolf-game)
+[![LastCommit](https://img.shields.io/github/last-commit/martindustry/pygames?style=for-the-badge)](https://github.com/martindustry/pygames/commits/main)
 
 ## Overview
 
